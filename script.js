@@ -105,11 +105,14 @@ function renderMeals(savedMeals) {
     const mealList = document.getElementById("meal-list");
     mealList.innerHTML = ""; // Clear existing meals
 
-    savedMeals[currentUser].meals.forEach(meal => {
-        const li = document.createElement("li");
-        li.innerText = `${meal.name} (Added by: ${meal.addedBy}, Ingredients: ${meal.ingredients.join(", ")})`;
-        mealList.appendChild(li);
-    });
+    // Display meals from all users
+    for (const user in savedMeals) {
+        savedMeals[user].meals.forEach(meal => {
+            const li = document.createElement("li");
+            li.innerText = `${meal.name} (Added by: ${meal.addedBy}, Ingredients: ${meal.ingredients.join(", ")})`;
+            mealList.appendChild(li);
+        });
+    }
 }
 
 // Render Shopping List Function
@@ -117,7 +120,15 @@ function renderShoppingList(savedMeals) {
     const shoppingList = document.getElementById("shopping-list");
     shoppingList.innerHTML = ""; // Clear existing shopping list
 
-    savedMeals[currentUser].shoppingList.forEach(item => {
+    // Combine shopping lists of all users
+    const allShoppingList = [];
+    for (const user in savedMeals) {
+        allShoppingList.push(...savedMeals[user].shoppingList);
+    }
+
+    // Remove duplicates and display the shopping list
+    const uniqueShoppingList = [...new Set(allShoppingList)];
+    uniqueShoppingList.forEach(item => {
         const li = document.createElement("li");
         li.innerText = item;
         shoppingList.appendChild(li);
@@ -127,8 +138,12 @@ function renderShoppingList(savedMeals) {
 // Clear Shopping List Function
 function clearShoppingList() {
     const { savedUsers, savedMeals } = loadData();
-    savedMeals[currentUser].shoppingList = [];
+
+    // Reset shopping list for all users
+    for (const user in savedMeals) {
+        savedMeals[user].shoppingList = [];
+    }
+
     saveData(savedUsers, savedMeals);
     renderShoppingList(savedMeals);
 }
-
