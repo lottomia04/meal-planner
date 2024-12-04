@@ -7,23 +7,25 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="login-container" style="display: block;">
-        <h2>Login</h2>
-        <input type="text" id="username" placeholder="Enter your username">
+    <!-- Login Page -->
+    <div id="login-page">
+        <h1>Meal Planner Login</h1>
+        <input type="text" id="username" placeholder="Enter username">
         <button onclick="login()">Login</button>
     </div>
 
-    <div id="app-container" style="display: none;">
+    <!-- Main App -->
+    <div id="main-app" style="display: none;">
         <h1>Meal Planner</h1>
         <p id="welcome-message"></p>
         <button onclick="logout()">Logout</button>
-        
+
         <h2>Add a Meal</h2>
-        <input type="text" id="meal-name" placeholder="Meal Name">
+        <input type="text" id="meal-name" placeholder="Meal name">
         <input type="text" id="meal-ingredients" placeholder="Ingredients (comma-separated)">
         <button onclick="addMeal()">Add Meal</button>
 
-        <h2>Available Meals</h2>
+        <h2>Meal Log</h2>
         <ul id="meal-list"></ul>
 
         <h2>Shopping List</h2>
@@ -34,4 +36,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
