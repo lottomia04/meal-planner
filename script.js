@@ -72,7 +72,7 @@ function renderMeals() {
     const mealLogDiv = document.getElementById("meal-log");
     mealLogDiv.innerHTML = ""; // Clear existing meal log
 
-    // Display each meal as a button
+    // Display each meal as a button with a delete option
     Object.keys(users).forEach(user => {
         users[user].meals.forEach(meal => {
             const mealButton = document.createElement("button");
