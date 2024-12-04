@@ -57,11 +57,9 @@
     </div>
 
     <script>
-        // Sample users and meal data
-        const users = {
-            'user1': { password: 'password1', meals: [] },
-            'user2': { password: 'password2', meals: [] }
-        };
+        // Load user data from localStorage (or default to empty)
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+
         let loggedInUser = null;
 
         // Login function
@@ -80,12 +78,13 @@
             }
         }
 
-        // Create Account function (for simplicity, just adds the user)
+        // Create Account function
         function createAccount() {
             const username = prompt('Enter username');
             const password = prompt('Enter password');
             if (!users[username]) {
                 users[username] = { password: password, meals: [] };
+                saveUsers();
                 alert('Account created successfully!');
             } else {
                 alert('Username already exists.');
@@ -99,6 +98,7 @@
             if (mealName && ingredients.length > 0) {
                 const meal = { name: mealName, ingredients: ingredients };
                 users[loggedInUser].meals.push(meal);
+                saveUsers(); // Save updated user data
                 renderMealLog();
             }
         }
@@ -148,9 +148,24 @@
         // Delete Meal function (Only deletes the meal from the meal log)
         function deleteMeal(index) {
             users[loggedInUser].meals.splice(index, 1);
+            saveUsers(); // Save updated user data
             renderMealLog();
         }
+
+        // Save users data to localStorage
+        function saveUsers() {
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        // Load user data on page load
+        window.onload = function() {
+            if (loggedInUser) {
+                renderMealLog();
+            }
+        };
+
     </script>
 
 </body>
 </html>
+
