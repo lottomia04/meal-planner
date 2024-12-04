@@ -1,13 +1,11 @@
 // Helper functions to load and save data from/to localStorage
 function loadData() {
     const users = JSON.parse(localStorage.getItem('users')) || {};
-    const meals = JSON.parse(localStorage.getItem('meals')) || {};
-    return { users, meals };
+    return { users };
 }
 
-function saveData(users, meals) {
+function saveData(users) {
     localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('meals', JSON.stringify(meals));
 }
 
 // Handle account login and sign up
@@ -41,7 +39,7 @@ function signUp() {
         alert("Username already exists.");
     } else {
         users[username] = { password, meals: [], shoppingList: [] };
-        saveData(users, loadData().meals);
+        saveData(users);
         alert("Account created! Please log in.");
     }
 }
@@ -54,7 +52,7 @@ function addMeal() {
     const mealName = document.getElementById("meal-name").value;
     const ingredients = document.getElementById("meal-ingredients").value.split(",").map(item => item.trim());
 
-    const { users, meals } = loadData();
+    const { users } = loadData();
 
     // Validate input
     if (!mealName || !ingredients.length) {
@@ -62,17 +60,14 @@ function addMeal() {
         return;
     }
 
-    // Add meal for the current user
+    // Add meal to the current user’s meal list
     if (currentUser) {
-        // Add meal to the current user
-        users[currentUser].meals.push({ name: mealName, ingredients, addedBy: currentUser });
-        // Add meal globally (so other users can see it)
-        meals[mealName] = { ingredients };
-        saveData(users, meals);
+        users[currentUser].meals.push({ name: mealName, ingredients });
+        saveData(users);
     }
 
-    renderMeals();
-    renderShoppingList();
+    renderMeals();  // Refresh the meal log
+    renderShoppingList(); // Refresh the shopping list
 }
 
 function renderMeals() {
@@ -80,11 +75,11 @@ function renderMeals() {
     const mealLogDiv = document.getElementById("meal-log");
     mealLogDiv.innerHTML = ""; // Clear existing meal log
 
-    // Display each meal as a button with a delete option
     if (currentUser) {
         users[currentUser].meals.forEach(meal => {
+            // Create a button for each meal
             const mealButton = document.createElement("button");
-            mealButton.textContent = `${meal.name} (Added by: ${meal.addedBy})`;
+            mealButton.textContent = meal.name;
             mealButton.onclick = () => addIngredientsToShoppingList(meal.ingredients);
             mealLogDiv.appendChild(mealButton);
 
@@ -99,7 +94,7 @@ function renderMeals() {
 
 function addIngredientsToShoppingList(ingredients) {
     const shoppingListDiv = document.getElementById("shopping-list");
-    
+
     ingredients.forEach(ingredient => {
         const li = document.createElement("li");
         li.textContent = ingredient;
@@ -108,16 +103,15 @@ function addIngredientsToShoppingList(ingredients) {
 }
 
 function deleteMeal(mealName) {
-    const { users, meals } = loadData();
+    const { users } = loadData();
 
     if (currentUser) {
-        // Remove meal from current user
+        // Remove meal from the current user's meals
         users[currentUser].meals = users[currentUser].meals.filter(meal => meal.name !== mealName);
-        delete meals[mealName]; // Remove from global meals
+        saveData(users);
 
-        saveData(users, meals);
-        renderMeals();
-        renderShoppingList();
+        renderMeals();  // Refresh the meal log
+        renderShoppingList();  // Refresh the shopping list
     }
 }
 
@@ -126,27 +120,28 @@ function renderShoppingList() {
     const shoppingListDiv = document.getElementById("shopping-list");
     shoppingListDiv.innerHTML = ""; // Clear existing shopping list
 
-    // Merge all ingredients from the logged-in user's meals
-    let allIngredients = [];
     if (currentUser) {
+        let allIngredients = [];
+
+        // Gather ingredients from all meals
         users[currentUser].meals.forEach(meal => {
             allIngredients = [...allIngredients, ...meal.ingredients];
         });
-    }
 
-    // Display ingredients in shopping list
-    allIngredients.forEach(ingredient => {
-        const li = document.createElement("li");
-        li.textContent = ingredient;
-        shoppingListDiv.appendChild(li);
-    });
+        // Display ingredients in the shopping list
+        allIngredients.forEach(ingredient => {
+            const li = document.createElement("li");
+            li.textContent = ingredient;
+            shoppingListDiv.appendChild(li);
+        });
+    }
 }
 
 function clearShoppingList() {
-    const { users, meals } = loadData();
+    const { users } = loadData();
     if (currentUser) {
         users[currentUser].shoppingList = []; // Clear shopping list for the current user
-        saveData(users, meals);
-        renderShoppingList();
+        saveData(users);
+        renderShoppingList(); // Refresh the shopping list
     }
 }
