@@ -56,9 +56,17 @@ function addMeal() {
 
     const { users, meals } = loadData();
 
+    // Validate input
+    if (!mealName || !ingredients.length) {
+        alert("Please enter both a meal name and ingredients.");
+        return;
+    }
+
     // Add meal for the current user
     if (currentUser) {
+        // Add meal to the current user
         users[currentUser].meals.push({ name: mealName, ingredients, addedBy: currentUser });
+        // Add meal globally (so other users can see it)
         meals[mealName] = { ingredients };
         saveData(users, meals);
     }
@@ -73,8 +81,8 @@ function renderMeals() {
     mealLogDiv.innerHTML = ""; // Clear existing meal log
 
     // Display each meal as a button with a delete option
-    Object.keys(users).forEach(user => {
-        users[user].meals.forEach(meal => {
+    if (currentUser) {
+        users[currentUser].meals.forEach(meal => {
             const mealButton = document.createElement("button");
             mealButton.textContent = `${meal.name} (Added by: ${meal.addedBy})`;
             mealButton.onclick = () => addIngredientsToShoppingList(meal.ingredients);
@@ -86,11 +94,10 @@ function renderMeals() {
             deleteButton.onclick = () => deleteMeal(meal.name);
             mealLogDiv.appendChild(deleteButton);
         });
-    });
+    }
 }
 
 function addIngredientsToShoppingList(ingredients) {
-    const { users } = loadData();
     const shoppingListDiv = document.getElementById("shopping-list");
     
     ingredients.forEach(ingredient => {
@@ -121,9 +128,11 @@ function renderShoppingList() {
 
     // Merge all ingredients from the logged-in user's meals
     let allIngredients = [];
-    users[currentUser].meals.forEach(meal => {
-        allIngredients = [...allIngredients, ...meal.ingredients];
-    });
+    if (currentUser) {
+        users[currentUser].meals.forEach(meal => {
+            allIngredients = [...allIngredients, ...meal.ingredients];
+        });
+    }
 
     // Display ingredients in shopping list
     allIngredients.forEach(ingredient => {
