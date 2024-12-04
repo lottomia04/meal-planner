@@ -1,40 +1,79 @@
 // Global Variables
-const users = {}; // Stores users and their data (meals, shopping list)
-let currentUser = null; // The user currently logged in
+let currentUser = null; // Current logged-in user
 
-// Login Function: Called when user clicks "Login"
+// Load data from localStorage (if any)
+function loadData() {
+    const savedUsers = JSON.parse(localStorage.getItem("users")) || {};
+    const savedMeals = JSON.parse(localStorage.getItem("meals")) || {};
+    return { savedUsers, savedMeals };
+}
+
+// Store data to localStorage
+function saveData(users, meals) {
+    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("meals", JSON.stringify(meals));
+}
+
+// Show the login page and hide others
+function showLoginPage() {
+    document.getElementById("login-page").style.display = "block";
+    document.getElementById("register-page").style.display = "none";
+    document.getElementById("main-app").style.display = "none";
+}
+
+// Show the registration page and hide others
+function showRegisterPage() {
+    document.getElementById("login-page").style.display = "none";
+    document.getElementById("register-page").style.display = "block";
+    document.getElementById("main-app").style.display = "none";
+}
+
+// Login Function
 function login() {
     const username = document.getElementById("username").value.trim();
-    if (!username) {
-        alert("Please enter a valid username.");
+    const password = document.getElementById("password").value.trim();
+    const { savedUsers, savedMeals } = loadData();
+
+    // Check if the user exists and the password is correct
+    if (savedUsers[username] && savedUsers[username].password === password) {
+        currentUser = username;
+        document.getElementById("welcome-message").innerText = `Welcome, ${username}!`;
+        document.getElementById("login-page").style.display = "none";
+        document.getElementById("main-app").style.display = "block";
+        renderMeals(savedMeals);
+        renderShoppingList(savedMeals);
+    } else {
+        alert("Invalid username or password.");
+    }
+}
+
+// Logout Function
+function logout() {
+    currentUser = null;
+    showLoginPage();
+}
+
+// Create Account Function
+function createAccount() {
+    const newUsername = document.getElementById("new-username").value.trim();
+    const newPassword = document.getElementById("new-password").value.trim();
+    const { savedUsers, savedMeals } = loadData();
+
+    // Check if the username already exists
+    if (savedUsers[newUsername]) {
+        alert("Username already taken.");
         return;
     }
 
-    currentUser = username;
+    // Create a new user and save it
+    savedUsers[newUsername] = { password: newPassword };
+    saveData(savedUsers, savedMeals);
 
-    // If the user does not exist, create them with an empty meal log and shopping list
-    if (!users[username]) {
-        users[username] = { meals: [], shoppingList: [] };
-    }
-
-    // Switch to the main app interface
-    document.getElementById("login-page").style.display = "none";
-    document.getElementById("main-app").style.display = "block";
-    document.getElementById("welcome-message").innerText = `Welcome, ${username}!`;
-
-    renderMeals();
-    renderShoppingList();
+    alert("Account created successfully!");
+    showLoginPage();
 }
 
-// Logout Function: Logs the user out and switches back to the login page
-function logout() {
-    currentUser = null;
-    document.getElementById("main-app").style.display = "none";
-    document.getElementById("login-page").style.display = "block";
-    document.getElementById("username").value = "";
-}
-
-// Add Meal: Adds a meal and its ingredients to the meal log and shopping list
+// Add Meal Function
 function addMeal() {
     const mealName = document.getElementById("meal-name").value.trim();
     const ingredients = document.getElementById("meal-ingredients").value.trim();
@@ -44,48 +83,52 @@ function addMeal() {
         return;
     }
 
-    // Split ingredients by commas and clean up extra spaces
     const ingredientList = ingredients.split(",").map(item => item.trim());
+    const { savedUsers, savedMeals } = loadData();
 
-    // Add the meal and ingredients to the user's data
-    users[currentUser].meals.push({ name: mealName, ingredients: ingredientList });
-    users[currentUser].shoppingList.push(...ingredientList); // Add ingredients to shopping list
+    // If it's the first time for this user, initialize their meal data
+    if (!savedMeals[currentUser]) {
+        savedMeals[currentUser] = { meals: [], shoppingList: [] };
+    }
 
-    // Clear input fields
-    document.getElementById("meal-name").value = "";
-    document.getElementById("meal-ingredients").value = "";
+    savedMeals[currentUser].meals.push({ name: mealName, ingredients: ingredientList, addedBy: currentUser });
+    savedMeals[currentUser].shoppingList.push(...ingredientList);
 
-    renderMeals();
-    renderShoppingList();
+    saveData(savedUsers, savedMeals);
+
+    renderMeals(savedMeals);
+    renderShoppingList(savedMeals);
 }
 
-// Render Meals: Displays the list of meals and their ingredients
-function renderMeals() {
+// Render Meals Function
+function renderMeals(savedMeals) {
     const mealList = document.getElementById("meal-list");
-    mealList.innerHTML = ""; // Clear existing meal list
+    mealList.innerHTML = ""; // Clear existing meals
 
-    users[currentUser].meals.forEach(meal => {
+    savedMeals[currentUser].meals.forEach(meal => {
         const li = document.createElement("li");
-        li.innerText = `${meal.name} (Ingredients: ${meal.ingredients.join(", ")})`;
+        li.innerText = `${meal.name} (Added by: ${meal.addedBy}, Ingredients: ${meal.ingredients.join(", ")})`;
         mealList.appendChild(li);
     });
 }
 
-// Render Shopping List: Displays the shopping list (ingredients)
-function renderShoppingList() {
+// Render Shopping List Function
+function renderShoppingList(savedMeals) {
     const shoppingList = document.getElementById("shopping-list");
     shoppingList.innerHTML = ""; // Clear existing shopping list
 
-    users[currentUser].shoppingList.forEach(item => {
+    savedMeals[currentUser].shoppingList.forEach(item => {
         const li = document.createElement("li");
         li.innerText = item;
         shoppingList.appendChild(li);
     });
 }
 
-// Clear Shopping List: Clears the shopping list
+// Clear Shopping List Function
 function clearShoppingList() {
-    users[currentUser].shoppingList = []; // Empty the shopping list
-    renderShoppingList(); // Re-render the shopping list
+    const { savedUsers, savedMeals } = loadData();
+    savedMeals[currentUser].shoppingList = [];
+    saveData(savedUsers, savedMeals);
+    renderShoppingList(savedMeals);
 }
 
