@@ -7,14 +7,25 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Login Page (Visible by default until login) -->
+    <!-- Login Page (Visible until login) -->
     <div id="login-page">
         <h1>Meal Planner Login</h1>
         <input type="text" id="username" placeholder="Enter username">
+        <input type="password" id="password" placeholder="Enter password">
         <button onclick="login()">Login</button>
+        <p>Don't have an account? <span onclick="showRegisterPage()" style="color: blue; cursor: pointer;">Create an Account</span></p>
     </div>
 
-    <!-- Main App (Initially hidden until login) -->
+    <!-- Registration Page (Visible if "Create Account" is clicked) -->
+    <div id="register-page" style="display: none;">
+        <h1>Create a New Account</h1>
+        <input type="text" id="new-username" placeholder="Enter username">
+        <input type="password" id="new-password" placeholder="Enter password">
+        <button onclick="createAccount()">Create Account</button>
+        <p>Already have an account? <span onclick="showLoginPage()" style="color: blue; cursor: pointer;">Login</span></p>
+    </div>
+
+    <!-- Main App (Visible only after login) -->
     <div id="main-app" style="display: none;">
         <h1>Meal Planner</h1>
         <p id="welcome-message"></p>
@@ -36,4 +47,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
