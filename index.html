@@ -4,46 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meal Planner</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 1rem;
+        }
+        #meal-log button {
+            margin-right: 10px;
+            padding: 10px;
+        }
+        #shopping-list {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Login Page (Visible until login) -->
-    <div id="login-page">
-        <h1>Meal Planner Login</h1>
-        <input type="text" id="username" placeholder="Enter username">
-        <input type="password" id="password" placeholder="Enter password">
-        <button onclick="login()">Login</button>
-        <p>Don't have an account? <span onclick="showRegisterPage()" style="color: blue; cursor: pointer;">Create an Account</span></p>
+
+<div class="container">
+    <h1>Welcome to Meal Planner</h1>
+    
+    <div id="login-section">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button id="login-button">Log in</button>
+        <button id="signup-button">Create Account</button>
     </div>
 
-    <!-- Registration Page (Visible if "Create Account" is clicked) -->
-    <div id="register-page" style="display: none;">
-        <h1>Create a New Account</h1>
-        <input type="text" id="new-username" placeholder="Enter username">
-        <input type="password" id="new-password" placeholder="Enter password">
-        <button onclick="createAccount()">Create Account</button>
-        <p>Already have an account? <span onclick="showLoginPage()" style="color: blue; cursor: pointer;">Login</span></p>
-    </div>
-
-    <!-- Main App (Visible only after login) -->
-    <div id="main-app" style="display: none;">
-        <h1>Meal Planner</h1>
-        <p id="welcome-message"></p>
-        <button onclick="logout()">Logout</button>
-
-        <h2>Add a Meal</h2>
-        <input type="text" id="meal-name" placeholder="Meal name">
-        <input type="text" id="meal-ingredients" placeholder="Ingredients (comma-separated)">
-        <button onclick="addMeal()">Add Meal</button>
-
-        <h2>Meal Log</h2>
-        <ul id="meal-list"></ul>
-
-        <h2>Shopping List</h2>
+    <div id="meal-planner-section" style="display: none;">
+        <h2>Meal Planner</h2>
+        <input type="text" id="meal-name" placeholder="Enter Meal Name" required>
+        <input type="text" id="meal-ingredients" placeholder="Enter Ingredients (comma separated)" required>
+        <button id="add-meal">Add Meal</button>
+        <h3>Meal Log:</h3>
+        <div id="meal-log"></div>
+        <h3>Shopping List:</h3>
         <ul id="shopping-list"></ul>
-        <button onclick="clearShoppingList()">Clear Shopping List</button>
+        <button id="clear-shopping-list">Clear Shopping List</button>
     </div>
+</div>
 
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
+
