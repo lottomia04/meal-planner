@@ -7,28 +7,31 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
+    <div id="login-container" style="display: block;">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Enter your username">
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div id="app-container" style="display: none;">
         <h1>Meal Planner</h1>
-    </header>
-    <main>
-        <section>
-            <h2>Log a Meal</h2>
-            <form id="meal-form">
-                <input type="text" id="meal-name" placeholder="Meal Name" required>
-                <textarea id="meal-ingredients" placeholder="Ingredients (comma-separated)" required></textarea>
-                <button type="submit">Add Meal</button>
-            </form>
-        </section>
-        <section>
-            <h2>Meal Log</h2>
-            <ul id="meal-log"></ul>
-        </section>
-        <section>
-            <h2>Shopping List</h2>
-            <ul id="shopping-list"></ul>
-        </section>
-    </main>
+        <p id="welcome-message"></p>
+        <button onclick="logout()">Logout</button>
+        
+        <h2>Add a Meal</h2>
+        <input type="text" id="meal-name" placeholder="Meal Name">
+        <input type="text" id="meal-ingredients" placeholder="Ingredients (comma-separated)">
+        <button onclick="addMeal()">Add Meal</button>
+
+        <h2>Available Meals</h2>
+        <ul id="meal-list"></ul>
+
+        <h2>Shopping List</h2>
+        <ul id="shopping-list"></ul>
+        <button onclick="clearShoppingList()">Clear Shopping List</button>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
-<!-- Debugging GitHub Pages -->
+
