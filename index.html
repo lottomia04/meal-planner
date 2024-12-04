@@ -9,51 +9,177 @@
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+        .hidden {
+            display: none;
         }
-        input, button {
-            margin: 10px;
+        button {
             padding: 10px;
-            font-size: 1rem;
+            margin: 5px;
+            cursor: pointer;
         }
-        #meal-log button {
-            margin-right: 10px;
-            padding: 10px;
-        }
-        #shopping-list {
-            margin-top: 20px;
+        #login, #mealPlanner {
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h1>Welcome to Meal Planner</h1>
-    
-    <div id="login-section">
-        <h2>Login</h2>
-        <input type="text" id="username" placeholder="Username" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button id="login-button">Log in</button>
-        <button id="signup-button">Create Account</button>
+    <div id="login">
+        <h1>Login</h1>
+        <input type="text" id="username" placeholder="Username" required><br>
+        <input type="password" id="password" placeholder="Password" required><br>
+        <button id="loginButton">Login</button>
+        <button id="signupButton">Create Account</button>
     </div>
 
-    <div id="meal-planner-section" style="display: none;">
-        <h2>Meal Planner</h2>
-        <input type="text" id="meal-name" placeholder="Enter Meal Name" required>
-        <input type="text" id="meal-ingredients" placeholder="Enter Ingredients (comma separated)" required>
-        <button id="add-meal">Add Meal</button>
-        <h3>Meal Log:</h3>
-        <div id="meal-log"></div>
-        <h3>Shopping List:</h3>
-        <ul id="shopping-list"></ul>
-        <button id="clear-shopping-list">Clear Shopping List</button>
-    </div>
-</div>
+    <div id="mealPlanner" class="hidden">
+        <h1>Welcome, <span id="userDisplay"></span></h1>
+        <h2>Meal Log</h2>
+        <div id="mealLog"></div>
 
-<script src="script.js"></script>
+        <h3>Add Meal</h3>
+        <input type="text" id="mealName" placeholder="Meal Name" required><br>
+        <input type="text" id="mealIngredients" placeholder="Ingredients (comma separated)" required><br>
+        <button id="addMealButton">Add Meal</button>
+
+        <h3>Shopping List</h3>
+        <div id="shoppingList"></div>
+        <button id="clearListButton">Clear Shopping List</button>
+        <button id="logoutButton">Logout</button>
+    </div>
+
+    <script>
+        // Check if user is logged in and load data
+        let currentUser = null;
+
+        const users = JSON.parse(localStorage.getItem('users')) || {};
+
+        function loadUserData() {
+            if (currentUser && users[currentUser]) {
+                const user = users[currentUser];
+                document.getElementById('userDisplay').textContent = currentUser;
+                renderMealLog(user);
+                renderShoppingList(user);
+            }
+        }
+
+        // Login functionality
+        document.getElementById('loginButton').addEventListener('click', () => {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (users[username] && users[username].password === password) {
+                currentUser = username;
+                document.getElementById('login').classList.add('hidden');
+                document.getElementById('mealPlanner').classList.remove('hidden');
+                loadUserData();
+            } else {
+                alert('Invalid username or password');
+            }
+        });
+
+        // Sign-up functionality
+        document.getElementById('signupButton').addEventListener('click', () => {
+            const username = prompt('Enter your desired username');
+            const password = prompt('Enter your password');
+
+            if (username && password) {
+                users[username] = { password, meals: [], shoppingList: [] };
+                localStorage.setItem('users', JSON.stringify(users));
+                alert('Account created successfully! Please log in.');
+            }
+        });
+
+        // Add meal to the log
+        document.getElementById('addMealButton').addEventListener('click', () => {
+            const mealName = document.getElementById('mealName').value;
+            const mealIngredients = document.getElementById('mealIngredients').value.split(',');
+
+            if (!mealName || mealIngredients.length === 0) {
+                alert('Please provide both meal name and ingredients.');
+                return;
+            }
+
+            if (currentUser) {
+                const user = users[currentUser];
+                const meal = { name: mealName, ingredients: mealIngredients };
+
+                user.meals.push(meal);
+                localStorage.setItem('users', JSON.stringify(users));
+
+                renderMealLog(user);
+                document.getElementById('mealName').value = '';
+                document.getElementById('mealIngredients').value = '';
+            }
+        });
+
+        // Render meal log
+        function renderMealLog(user) {
+            const mealLogDiv = document.getElementById('mealLog');
+            mealLogDiv.innerHTML = '';
+
+            user.meals.forEach((meal, index) => {
+                const mealButton = document.createElement('button');
+                mealButton.textContent = meal.name;
+                mealButton.addEventListener('click', () => addToShoppingList(meal));
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', () => deleteMeal(user, index));
+
+                const mealDiv = document.createElement('div');
+                mealDiv.appendChild(mealButton);
+                mealDiv.appendChild(deleteButton);
+                mealLogDiv.appendChild(mealDiv);
+            });
+        }
+
+        // Add ingredients to shopping list
+        function addToShoppingList(meal) {
+            const user = users[currentUser];
+            meal.ingredients.forEach(ingredient => {
+                if (!user.shoppingList.includes(ingredient.trim())) {
+                    user.shoppingList.push(ingredient.trim());
+                }
+            });
+            localStorage.setItem('users', JSON.stringify(users));
+            renderShoppingList(user);
+        }
+
+        // Render shopping list
+        function renderShoppingList(user) {
+            const shoppingListDiv = document.getElementById('shoppingList');
+            shoppingListDiv.innerHTML = '';
+            user.shoppingList.forEach(item => {
+                const listItem = document.createElement('div');
+                listItem.textContent = item;
+                shoppingListDiv.appendChild(listItem);
+            });
+        }
+
+        // Clear shopping list
+        document.getElementById('clearListButton').addEventListener('click', () => {
+            if (currentUser) {
+                const user = users[currentUser];
+                user.shoppingList = [];
+                localStorage.setItem('users', JSON.stringify(users));
+                renderShoppingList(user);
+            }
+        });
+
+        // Delete meal from log
+        function deleteMeal(user, index) {
+            user.meals.splice(index, 1);
+            localStorage.setItem('users', JSON.stringify(users));
+            renderMealLog(user);
+            renderShoppingList(user);
+        }
+
+        // Logout functionality
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            currentUser = null;
+            document.getElementById('login').classList.remove('hidden');
+            document.getElementById('mealPlanner').classList.add('hidden');
+        });
+    </script>
 </body>
 </html>
+
