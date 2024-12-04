@@ -147,3 +147,45 @@ function clearShoppingList() {
     saveData(savedUsers, savedMeals);
     renderShoppingList(savedMeals);
 }
+// Render Meals Function
+function renderMeals(savedMeals) {
+    const mealList = document.getElementById("meal-list");
+    mealList.innerHTML = ""; // Clear existing meals
+
+    // Display meals from all users
+    for (const user in savedMeals) {
+        savedMeals[user].meals.forEach(meal => {
+            const button = document.createElement("button");
+            button.innerText = `${meal.name} (Added by: ${meal.addedBy})`;
+            button.onclick = () => addIngredientsToShoppingList(meal.ingredients);
+
+            mealList.appendChild(button);
+        });
+    }
+}
+
+// Function to add meal ingredients to shopping list
+function addIngredientsToShoppingList(ingredients) {
+    const { savedUsers, savedMeals } = loadData();
+    const uniqueIngredients = [...new Set(ingredients)]; // Remove duplicates
+
+    // Add ingredients to the shared shopping list
+    uniqueIngredients.forEach(ingredient => {
+        // Add to shopping list if it doesn't already exist
+        const shoppingListItems = document.getElementById("shopping-list").getElementsByTagName("li");
+        const existingItems = Array.from(shoppingListItems).map(item => item.innerText);
+        
+        if (!existingItems.includes(ingredient)) {
+            const li = document.createElement("li");
+            li.innerText = ingredient;
+            document.getElementById("shopping-list").appendChild(li);
+        }
+    });
+
+    // Update shopping list in localStorage
+    for (const user in savedMeals) {
+        savedMeals[user].shoppingList.push(...uniqueIngredients);
+    }
+
+    saveData(savedUsers, savedMeals);
+}
