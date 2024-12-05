@@ -83,7 +83,7 @@
             const username = prompt('Enter username');
             const password = prompt('Enter password');
             if (!users[username]) {
-                users[username] = { password: password, meals: [], shoppingList: [] };
+                users[username] = { password: password, meals: [] };
                 saveUsers();
                 alert('Account created successfully!');
             } else {
@@ -143,10 +143,6 @@
         function clearShoppingList() {
             const shoppingListUl = document.getElementById('shopping-list-ul');
             shoppingListUl.innerHTML = ''; // Clear the shopping list only
-
-            // Clear the shopping list for the current user (in memory)
-            users[loggedInUser].shoppingList = [];
-            saveUsers(); // Save the cleared shopping list to localStorage
         }
 
         // Delete Meal function (Only deletes the meal from the meal log)
