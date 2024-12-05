@@ -162,4 +162,3 @@ function updateUserData() {
 // Call checkLoggedInUser when the page loads
 checkLoggedInUser();
 initCalendar();
-
