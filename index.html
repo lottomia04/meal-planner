@@ -4,96 +4,171 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meal Planner</title>
-
-    <!-- FullCalendar CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.css" rel="stylesheet" />
-    
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- FullCalendar JS -->
-    <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
-
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+            background-color: #f4f4f4;
+            padding: 20px;
         }
-        .container {
-            width: 80%;
-            margin: 20px auto;
-        }
-        #meal-log {
-            margin-bottom: 20px;
-        }
-        .meal-item {
-            padding: 10px;
-            margin: 5px;
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            cursor: pointer;
-        }
-        #calendar {
-            max-width: 900px;
-            margin: 0 auto;
-            margin-top: 30px;
-            height: 600px;
-        }
-        #delete-account-btn {
-            background-color: red;
-            color: white;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
+        #meal-log, #shopping-list {
             margin-top: 20px;
         }
-        #delete-account-btn:hover {
-            background-color: darkred;
+        button {
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input, button {
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Meal Planner</h1>
+    <h1>Meal Planner</h1>
 
-        <!-- Meal Log Section -->
+    <div id="login">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Enter username" />
+        <input type="password" id="password" placeholder="Enter password" />
+        <button onclick="login()">Login</button>
+        <button onclick="createAccount()">Create Account</button>
+        <p id="login-error" style="color: red; display: none;">Incorrect username or password</p>
+    </div>
+
+    <div id="meal-planner" style="display: none;">
+        <h2>Welcome, <span id="user-name"></span></h2>
+        <input type="text" id="meal-name" placeholder="Enter meal name" />
+        <textarea id="meal-ingredients" placeholder="Enter ingredients (comma separated)"></textarea>
+        <button onclick="addMeal()">Add Meal</button>
+
         <div id="meal-log">
-            <h2>Meal Log</h2>
-            <input type="text" id="meal-name" placeholder="Enter a new meal">
-            <button onclick="addMeal()">Add Meal</button>
-            <ul id="meal-list"></ul>
+            <h3>Meal Log</h3>
+            <ul id="meal-log-list"></ul>
         </div>
 
-        <!-- Shopping List Section -->
-        <div>
-            <h2>Shopping List</h2>
-            <ul id="shopping-list"></ul>
-            <button onclick="clearShoppingList()">Clear Shopping List</button>
-        </div>
+        <button onclick="clearShoppingList()">Clear Shopping List</button>
 
-        <!-- Weekly Calendar Section -->
-        <h2>Meal Calendar</h2>
-        <div id="calendar"></div>
-
-        <!-- Login Section -->
-        <div id="login-section">
-            <h2>Login</h2>
-            <input type="text" id="login-username" placeholder="Username">
-            <input type="password" id="login-password" placeholder="Password">
-            <button onclick="login()">Login</button>
-            <button onclick="createAccount()">Create Account</button>
-        </div>
-
-        <!-- Account Section (After Login) -->
-        <div id="account-section" style="display: none;">
-            <h2>Welcome, <span id="current-username"></span></h2>
-            <button id="delete-account-btn" onclick="deleteAccount()">Delete Account</button>
+        <div id="shopping-list">
+            <h3>Shopping List</h3>
+            <ul id="shopping-list-ul"></ul>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // Load user data from localStorage (or default to empty)
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+
+        let loggedInUser = null;
+
+        // Login function
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (users[username] && users[username].password === password) {
+                loggedInUser = username;
+                document.getElementById('user-name').textContent = username;
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('meal-planner').style.display = 'block';
+                renderMealLog();
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        }
+
+        // Create Account function
+        function createAccount() {
+            const username = prompt('Enter username');
+            const password = prompt('Enter password');
+            if (!users[username]) {
+                users[username] = { password: password, meals: [], shoppingList: [] };
+                saveUsers();
+                alert('Account created successfully!');
+            } else {
+                alert('Username already exists.');
+            }
+        }
+
+        // Add Meal function
+        function addMeal() {
+            const mealName = document.getElementById('meal-name').value;
+            const ingredients = document.getElementById('meal-ingredients').value.split(',').map(ingredient => ingredient.trim());
+            if (mealName && ingredients.length > 0) {
+                const meal = { name: mealName, ingredients: ingredients };
+                users[loggedInUser].meals.push(meal);
+                saveUsers(); // Save updated user data
+                renderMealLog();
+            }
+        }
+
+        // Render Meal Log function
+        function renderMealLog() {
+            const mealLogList = document.getElementById('meal-log-list');
+            mealLogList.innerHTML = ''; // Clear current list
+
+            users[loggedInUser].meals.forEach((meal, index) => {
+                const mealItem = document.createElement('li');
+                mealItem.textContent = meal.name;
+                const addButton = document.createElement('button');
+                addButton.textContent = 'Add Ingredients';
+                addButton.onclick = function() {
+                    addIngredientsToShoppingList(meal.ingredients);
+                };
+                mealItem.appendChild(addButton);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete Meal';
+                deleteButton.onclick = function() {
+                    deleteMeal(index);
+                };
+                mealItem.appendChild(deleteButton);
+
+                mealLogList.appendChild(mealItem);
+            });
+        }
+
+        // Add Ingredients to Shopping List function
+        function addIngredientsToShoppingList(ingredients) {
+            const shoppingListUl = document.getElementById('shopping-list-ul');
+            ingredients.forEach(ingredient => {
+                const li = document.createElement('li');
+                li.textContent = ingredient;
+                shoppingListUl.appendChild(li);
+            });
+        }
+
+        // Clear Shopping List function (Only clears the shopping list)
+        function clearShoppingList() {
+            const shoppingListUl = document.getElementById('shopping-list-ul');
+            shoppingListUl.innerHTML = ''; // Clear the shopping list only
+
+            // Clear the shopping list for the current user (in memory)
+            users[loggedInUser].shoppingList = [];
+            saveUsers(); // Save the cleared shopping list to localStorage
+        }
+
+        // Delete Meal function (Only deletes the meal from the meal log)
+        function deleteMeal(index) {
+            users[loggedInUser].meals.splice(index, 1);
+            saveUsers(); // Save updated user data
+            renderMealLog();
+        }
+
+        // Save users data to localStorage
+        function saveUsers() {
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+
+        // Load user data on page load
+        window.onload = function() {
+            if (loggedInUser) {
+                renderMealLog();
+            }
+        };
+
+    </script>
+
 </body>
 </html>
