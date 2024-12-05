@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meal Planner</title>
-    
+
     <!-- FullCalendar CSS (For styling the calendar) -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.css" rel="stylesheet" />
-    
+
     <!-- FullCalendar JS (For calendar functionality) -->
     <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
-    
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -35,6 +35,7 @@
         #calendar {
             max-width: 900px;
             margin: 0 auto;
+            margin-top: 30px;
         }
     </style>
 </head>
@@ -42,7 +43,7 @@
 
     <div class="container">
         <h1>Meal Planner</h1>
-        
+
         <!-- Meal Log Section -->
         <div id="meal-log">
             <h2>Meal Log</h2>
@@ -58,7 +59,7 @@
             <button onclick="clearShoppingList()">Clear Shopping List</button>
         </div>
 
-        <!-- Calendar Section -->
+        <!-- Weekly Calendar Section -->
         <h2>Meal Calendar</h2>
         <div id="calendar"></div>
     </div>
@@ -66,8 +67,6 @@
     <script>
         // Initialize meal log array from localStorage
         let meals = JSON.parse(localStorage.getItem('meals')) || [];
-
-        // Initialize shopping list from localStorage
         let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
 
         // Function to render the meal log
@@ -137,7 +136,7 @@
             renderMealLog();
         }
 
-        // Function to initialize the calendar
+        // Initialize the calendar
         function initCalendar() {
             $('#calendar').fullCalendar({
                 header: {
@@ -154,6 +153,9 @@
                     // Save the meal with the selected date (mealDate)
                     const mealDate = date.format();
                     localStorage.setItem(mealDate, JSON.stringify(meal));
+
+                    // Add meal ingredients to shopping list
+                    addToShoppingList(meal);
 
                     // Render the dropped meal onto the calendar
                     $('#calendar').fullCalendar('renderEvent', {
