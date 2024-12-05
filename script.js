@@ -1,137 +1,147 @@
-let currentUser = null;
-let mealLog = [];
-let shoppingList = [];
-
-// Initialize when the page loads
-function checkLoggedInUser() {
-    const loggedInUsername = localStorage.getItem('loggedInUsername');
-    if (loggedInUsername) {
-        currentUser = loggedInUsername;
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('account-section').style.display = 'block';
-        document.getElementById('current-username').textContent = currentUser;
-        loadMealLog();
-        loadShoppingList();
-    }
+// Helper functions to load and save data from/to localStorage
+function loadData() {
+    const users = JSON.parse(localStorage.getItem('users')) || {};
+    return { users };
 }
 
-// Login functionality
+function saveData(users) {
+    localStorage.setItem('users', JSON.stringify(users));
+}
+
+// Handle account login and sign up
+document.getElementById("login-button").addEventListener("click", login);
+document.getElementById("signup-button").addEventListener("click", signUp);
+
+let currentUser = null; // Store current logged-in user
+
 function login() {
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
+    const { users } = loadData();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
 
-    if (username && password) {
-        const user = JSON.parse(localStorage.getItem(username));
-        if (user && user.password === password) {
-            currentUser = username;
-            localStorage.setItem('loggedInUsername', username);
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('account-section').style.display = 'block';
-            document.getElementById('current-username').textContent = currentUser;
-            loadMealLog();
-            loadShoppingList();
-        } else {
-            alert('Invalid username or password!');
-        }
+    if (users[username] && users[username].password === password) {
+        currentUser = username;
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("meal-planner-section").style.display = "block";
+        renderMeals();
+        renderShoppingList();
     } else {
-        alert('Please enter both username and password!');
+        alert("Invalid username or password");
     }
 }
 
-// Account creation functionality
-function createAccount() {
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
+function signUp() {
+    const { users } = loadData();
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
 
-    if (username && password) {
-        const existingUser = localStorage.getItem(username);
-        if (existingUser) {
-            alert('Account already exists!');
-        } else {
-            const newUser = { username, password, meals: [], shoppingList: [] };
-            localStorage.setItem(username, JSON.stringify(newUser));
-            alert('Account created successfully!');
-        }
+    if (users[username]) {
+        alert("Username already exists.");
     } else {
-        alert('Please enter both username and password!');
+        users[username] = { password, meals: [], shoppingList: [] };
+        saveData(users);
+        alert("Account created! Please log in.");
     }
 }
 
-// Add a new meal to the meal log
+// Handle adding meals to the meal log and shopping list
+document.getElementById("add-meal").addEventListener("click", addMeal);
+document.getElementById("clear-shopping-list").addEventListener("click", clearShoppingList);
+
 function addMeal() {
-    const mealName = document.getElementById('meal-name').value;
-    if (mealName && currentUser) {
-        mealLog.push({ name: mealName, user: currentUser });
-        updateMealLog();
-        updateUserData();
+    const mealName = document.getElementById("meal-name").value;
+    const ingredients = document.getElementById("meal-ingredients").value.split(",").map(item => item.trim());
+
+    const { users } = loadData();
+
+    // Validate input
+    if (!mealName || !ingredients.length) {
+        alert("Please enter both a meal name and ingredients.");
+        return;
+    }
+
+    // Add meal to the current user’s meal list
+    if (currentUser) {
+        users[currentUser].meals.push({ name: mealName, ingredients });
+        saveData(users);
+    }
+
+    renderMeals();  // Refresh the meal log
+    renderShoppingList(); // Refresh the shopping list
+}
+
+function renderMeals() {
+    const { users } = loadData();
+    const mealLogDiv = document.getElementById("meal-log");
+    mealLogDiv.innerHTML = ""; // Clear existing meal log
+
+    if (currentUser) {
+        users[currentUser].meals.forEach(meal => {
+            // Create a button for each meal
+            const mealButton = document.createElement("button");
+            mealButton.textContent = meal.name;
+            mealButton.onclick = () => addIngredientsToShoppingList(meal.ingredients);
+            mealLogDiv.appendChild(mealButton);
+
+            // Add a delete button for each meal
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Delete";
+            deleteButton.onclick = () => deleteMeal(meal.name);
+            mealLogDiv.appendChild(deleteButton);
+        });
     }
 }
 
-// Load meal log from localStorage
-function loadMealLog() {
-    const userData = JSON.parse(localStorage.getItem(currentUser));
-    mealLog = userData ? userData.meals : [];
-    updateMealLog();
-}
+function addIngredientsToShoppingList(ingredients) {
+    const shoppingListDiv = document.getElementById("shopping-list");
 
-// Update the meal log displayed on the page
-function updateMealLog() {
-    const mealList = document.getElementById('meal-list');
-    mealList.innerHTML = '';
-    mealLog.forEach(meal => {
-        const li = document.createElement('li');
-        li.textContent = meal.name;
-        li.classList.add('meal-item');
-        mealList.appendChild(li);
+    ingredients.forEach(ingredient => {
+        const li = document.createElement("li");
+        li.textContent = ingredient;
+        shoppingListDiv.appendChild(li);
     });
 }
 
-// Clear the shopping list
+function deleteMeal(mealName) {
+    const { users } = loadData();
+
+    if (currentUser) {
+        // Remove meal from the current user's meals
+        users[currentUser].meals = users[currentUser].meals.filter(meal => meal.name !== mealName);
+        saveData(users);
+
+        renderMeals();  // Refresh the meal log
+        renderShoppingList();  // Refresh the shopping list
+    }
+}
+
+function renderShoppingList() {
+    const { users } = loadData();
+    const shoppingListDiv = document.getElementById("shopping-list");
+    shoppingListDiv.innerHTML = ""; // Clear existing shopping list
+
+    if (currentUser) {
+        let allIngredients = [];
+
+        // Gather ingredients from all meals
+        users[currentUser].meals.forEach(meal => {
+            allIngredients = [...allIngredients, ...meal.ingredients];
+        });
+
+        // Display ingredients in the shopping list
+        allIngredients.forEach(ingredient => {
+            const li = document.createElement("li");
+            li.textContent = ingredient;
+            shoppingListDiv.appendChild(li);
+        });
+    }
+}
+
 function clearShoppingList() {
-    shoppingList = [];
-    updateShoppingList();
-    updateUserData();
-}
-
-// Load shopping list from localStorage
-function loadShoppingList() {
-    const userData = JSON.parse(localStorage.getItem(currentUser));
-    shoppingList = userData ? userData.shoppingList : [];
-    updateShoppingList();
-}
-
-// Update the shopping list displayed on the page
-function updateShoppingList() {
-    const shoppingListElement = document.getElementById('shopping-list');
-    shoppingListElement.innerHTML = '';
-    shoppingList.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        shoppingListElement.appendChild(li);
-    });
-}
-
-// Delete the user account
-function deleteAccount() {
-    const confirmation = confirm('Are you sure you want to delete your account? This action cannot be undone.');
-    if (confirmation) {
-        localStorage.removeItem(currentUser);
-        localStorage.removeItem('loggedInUsername');
-        alert('Your account has been deleted.');
-        window.location.reload();
+    const { users } = loadData();
+    if (currentUser) {
+        users[currentUser].shoppingList = []; // Clear shopping list for the current user
+        saveData(users);
+        renderShoppingList(); // Refresh the shopping list
     }
 }
-
-// Update user data in localStorage
-function updateUserData() {
-    const userData = {
-        username: currentUser,
-        password: JSON.parse(localStorage.getItem(currentUser)).password,
-        meals: mealLog,
-        shoppingList: shoppingList,
-    };
-    localStorage.setItem(currentUser, JSON.stringify(userData));
-}
-
-// Initialize login state
-checkLoggedInUser();
