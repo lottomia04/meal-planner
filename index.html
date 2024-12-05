@@ -5,10 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meal Planner</title>
 
-    <!-- FullCalendar CSS (For styling the calendar) -->
+    <!-- FullCalendar CSS -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.css" rel="stylesheet" />
 
-    <!-- FullCalendar JS (For calendar functionality) -->
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- FullCalendar JS -->
     <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
 
@@ -36,6 +39,18 @@
             max-width: 900px;
             margin: 0 auto;
             margin-top: 30px;
+            height: 600px;
+        }
+        #delete-account-btn {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #delete-account-btn:hover {
+            background-color: darkred;
         }
     </style>
 </head>
@@ -62,133 +77,23 @@
         <!-- Weekly Calendar Section -->
         <h2>Meal Calendar</h2>
         <div id="calendar"></div>
+
+        <!-- Login Section -->
+        <div id="login-section">
+            <h2>Login</h2>
+            <input type="text" id="login-username" placeholder="Username">
+            <input type="password" id="login-password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <button onclick="createAccount()">Create Account</button>
+        </div>
+
+        <!-- Account Section (After Login) -->
+        <div id="account-section" style="display: none;">
+            <h2>Welcome, <span id="current-username"></span></h2>
+            <button id="delete-account-btn" onclick="deleteAccount()">Delete Account</button>
+        </div>
     </div>
 
-    <script>
-        // Initialize meal log array from localStorage
-        let meals = JSON.parse(localStorage.getItem('meals')) || [];
-        let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
-
-        // Function to render the meal log
-        function renderMealLog() {
-            const mealList = document.getElementById('meal-list');
-            mealList.innerHTML = ''; // Clear existing list
-
-            meals.forEach((meal, index) => {
-                const mealDiv = document.createElement('div');
-                mealDiv.classList.add('meal-item');
-                mealDiv.setAttribute('data-index', index);
-                mealDiv.setAttribute('draggable', 'true');
-                mealDiv.innerHTML = meal.name;
-                mealDiv.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', index); // Store the meal index for dragging
-                });
-
-                mealList.appendChild(mealDiv);
-            });
-        }
-
-        // Function to add a meal to the meal log
-        function addMeal() {
-            const mealName = document.getElementById('meal-name').value;
-            if (!mealName) return;
-
-            const newMeal = { name: mealName, ingredients: ['ingredient 1', 'ingredient 2'] }; // Example ingredients
-            meals.push(newMeal);
-            localStorage.setItem('meals', JSON.stringify(meals));
-
-            renderMealLog();
-            document.getElementById('meal-name').value = ''; // Clear the input
-        }
-
-        // Function to clear the shopping list
-        function clearShoppingList() {
-            shoppingList = [];
-            localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
-            renderShoppingList();
-        }
-
-        // Function to render the shopping list
-        function renderShoppingList() {
-            const shoppingListElement = document.getElementById('shopping-list');
-            shoppingListElement.innerHTML = '';
-
-            shoppingList.forEach(item => {
-                const li = document.createElement('li');
-                li.textContent = item;
-                shoppingListElement.appendChild(li);
-            });
-        }
-
-        // Function to add meal ingredients to the shopping list
-        function addToShoppingList(meal) {
-            meal.ingredients.forEach(ingredient => {
-                shoppingList.push(ingredient);
-            });
-            localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
-            renderShoppingList();
-        }
-
-        // Function to delete a meal from the meal log
-        function deleteMeal(index) {
-            meals.splice(index, 1);
-            localStorage.setItem('meals', JSON.stringify(meals));
-            renderMealLog();
-        }
-
-        // Initialize the calendar
-        function initCalendar() {
-            $('#calendar').fullCalendar({
-                header: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'month,agendaWeek,agendaDay'
-                },
-                editable: true, // Enable editing (drag-and-drop)
-                droppable: true, // Allow dropping items onto the calendar
-                drop: function (date, jsEvent, ui, resourceId) {
-                    const mealIndex = ui.helper[0].dataset.index; // Get the meal index from the dragged item
-                    const meal = meals[mealIndex]; // Get the meal object
-
-                    // Save the meal with the selected date (mealDate)
-                    const mealDate = date.format();
-                    localStorage.setItem(mealDate, JSON.stringify(meal));
-
-                    // Add meal ingredients to shopping list
-                    addToShoppingList(meal);
-
-                    // Render the dropped meal onto the calendar
-                    $('#calendar').fullCalendar('renderEvent', {
-                        title: meal.name,
-                        start: mealDate,
-                        allDay: true
-                    }, true);
-                }
-            });
-        }
-
-        // Load saved meals and shopping list
-        function loadSavedData() {
-            renderMealLog();
-            renderShoppingList();
-
-            // Load any stored calendar events
-            const storedMeals = Object.keys(localStorage).filter(key => key.includes('mealDate'));
-            storedMeals.forEach(mealDate => {
-                const meal = JSON.parse(localStorage.getItem(mealDate));
-                $('#calendar').fullCalendar('renderEvent', {
-                    title: meal.name,
-                    start: mealDate,
-                    allDay: true
-                });
-            });
-        }
-
-        // Initialize the page
-        window.onload = function() {
-            loadSavedData();
-            initCalendar();
-        };
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
