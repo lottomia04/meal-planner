@@ -2,7 +2,7 @@ let currentUser = null;
 let mealLog = [];
 let shoppingList = [];
 
-// Check if there's a logged-in user
+// Initialize when the page loads
 function checkLoggedInUser() {
     const loggedInUsername = localStorage.getItem('loggedInUsername');
     if (loggedInUsername) {
@@ -15,7 +15,7 @@ function checkLoggedInUser() {
     }
 }
 
-// Handle login
+// Login functionality
 function login() {
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
@@ -38,7 +38,7 @@ function login() {
     }
 }
 
-// Handle account creation
+// Account creation functionality
 function createAccount() {
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
@@ -57,7 +57,7 @@ function createAccount() {
     }
 }
 
-// Handle adding a meal
+// Add a new meal to the meal log
 function addMeal() {
     const mealName = document.getElementById('meal-name').value;
     if (mealName && currentUser) {
@@ -74,7 +74,7 @@ function loadMealLog() {
     updateMealLog();
 }
 
-// Update the meal log on the page
+// Update the meal log displayed on the page
 function updateMealLog() {
     const mealList = document.getElementById('meal-list');
     mealList.innerHTML = '';
@@ -82,15 +82,11 @@ function updateMealLog() {
         const li = document.createElement('li');
         li.textContent = meal.name;
         li.classList.add('meal-item');
-        li.setAttribute('draggable', 'true');
-        li.addEventListener('dragstart', (event) => {
-            event.dataTransfer.setData('meal', meal.name);
-        });
         mealList.appendChild(li);
     });
 }
 
-// Handle clearing shopping list
+// Clear the shopping list
 function clearShoppingList() {
     shoppingList = [];
     updateShoppingList();
@@ -104,7 +100,7 @@ function loadShoppingList() {
     updateShoppingList();
 }
 
-// Update the shopping list on the page
+// Update the shopping list displayed on the page
 function updateShoppingList() {
     const shoppingListElement = document.getElementById('shopping-list');
     shoppingListElement.innerHTML = '';
@@ -115,29 +111,7 @@ function updateShoppingList() {
     });
 }
 
-// Handle drag-and-drop for the calendar
-function handleDrop(event) {
-    event.preventDefault();
-    const mealName = event.dataTransfer.getData('meal');
-    const day = event.target.getAttribute('data-day');
-    
-    if (mealName && day) {
-        shoppingList.push(mealName);
-        updateShoppingList();
-        updateUserData();
-        alert(`Added ${mealName} to ${day} and shopping list.`);
-    }
-}
-
-// Create and initialize the calendar
-function initCalendar() {
-    $('#calendar').fullCalendar({
-        droppable: true, // Enable drag and drop
-        drop: handleDrop,
-    });
-}
-
-// Delete user account
+// Delete the user account
 function deleteAccount() {
     const confirmation = confirm('Are you sure you want to delete your account? This action cannot be undone.');
     if (confirmation) {
@@ -159,6 +133,5 @@ function updateUserData() {
     localStorage.setItem(currentUser, JSON.stringify(userData));
 }
 
-// Call checkLoggedInUser when the page loads
+// Initialize login state
 checkLoggedInUser();
-initCalendar();
