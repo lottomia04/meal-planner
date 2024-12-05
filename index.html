@@ -4,171 +4,189 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meal Planner</title>
+    
+    <!-- FullCalendar CSS (For styling the calendar) -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.css" rel="stylesheet" />
+    
+    <!-- FullCalendar JS (For calendar functionality) -->
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.24.0/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
+    
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 20px;
+            margin: 0;
+            padding: 0;
         }
-        #meal-log, #shopping-list {
-            margin-top: 20px;
+        .container {
+            width: 80%;
+            margin: 20px auto;
         }
-        button {
+        #meal-log {
+            margin-bottom: 20px;
+        }
+        .meal-item {
             padding: 10px;
             margin: 5px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
             cursor: pointer;
-            font-size: 16px;
         }
-        input, button {
-            font-size: 16px;
+        #calendar {
+            max-width: 900px;
+            margin: 0 auto;
         }
     </style>
 </head>
 <body>
 
-    <h1>Meal Planner</h1>
-
-    <div id="login">
-        <h2>Login</h2>
-        <input type="text" id="username" placeholder="Enter username" />
-        <input type="password" id="password" placeholder="Enter password" />
-        <button onclick="login()">Login</button>
-        <button onclick="createAccount()">Create Account</button>
-        <p id="login-error" style="color: red; display: none;">Incorrect username or password</p>
-    </div>
-
-    <div id="meal-planner" style="display: none;">
-        <h2>Welcome, <span id="user-name"></span></h2>
-        <input type="text" id="meal-name" placeholder="Enter meal name" />
-        <textarea id="meal-ingredients" placeholder="Enter ingredients (comma separated)"></textarea>
-        <button onclick="addMeal()">Add Meal</button>
-
+    <div class="container">
+        <h1>Meal Planner</h1>
+        
+        <!-- Meal Log Section -->
         <div id="meal-log">
-            <h3>Meal Log</h3>
-            <ul id="meal-log-list"></ul>
+            <h2>Meal Log</h2>
+            <input type="text" id="meal-name" placeholder="Enter a new meal">
+            <button onclick="addMeal()">Add Meal</button>
+            <ul id="meal-list"></ul>
         </div>
 
-        <button onclick="clearShoppingList()">Clear Shopping List</button>
-
-        <div id="shopping-list">
-            <h3>Shopping List</h3>
-            <ul id="shopping-list-ul"></ul>
+        <!-- Shopping List Section -->
+        <div>
+            <h2>Shopping List</h2>
+            <ul id="shopping-list"></ul>
+            <button onclick="clearShoppingList()">Clear Shopping List</button>
         </div>
+
+        <!-- Calendar Section -->
+        <h2>Meal Calendar</h2>
+        <div id="calendar"></div>
     </div>
 
     <script>
-        // Load user data from localStorage (or default to empty)
-        let users = JSON.parse(localStorage.getItem('users')) || {};
+        // Initialize meal log array from localStorage
+        let meals = JSON.parse(localStorage.getItem('meals')) || [];
 
-        let loggedInUser = null;
+        // Initialize shopping list from localStorage
+        let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
 
-        // Login function
-        function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            if (users[username] && users[username].password === password) {
-                loggedInUser = username;
-                document.getElementById('user-name').textContent = username;
-                document.getElementById('login').style.display = 'none';
-                document.getElementById('meal-planner').style.display = 'block';
-                renderMealLog();
-            } else {
-                document.getElementById('login-error').style.display = 'block';
-            }
+        // Function to render the meal log
+        function renderMealLog() {
+            const mealList = document.getElementById('meal-list');
+            mealList.innerHTML = ''; // Clear existing list
+
+            meals.forEach((meal, index) => {
+                const mealDiv = document.createElement('div');
+                mealDiv.classList.add('meal-item');
+                mealDiv.setAttribute('data-index', index);
+                mealDiv.setAttribute('draggable', 'true');
+                mealDiv.innerHTML = meal.name;
+                mealDiv.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', index); // Store the meal index for dragging
+                });
+
+                mealList.appendChild(mealDiv);
+            });
         }
 
-        // Create Account function
-        function createAccount() {
-            const username = prompt('Enter username');
-            const password = prompt('Enter password');
-            if (!users[username]) {
-                users[username] = { password: password, meals: [], shoppingList: [] };
-                saveUsers();
-                alert('Account created successfully!');
-            } else {
-                alert('Username already exists.');
-            }
-        }
-
-        // Add Meal function
+        // Function to add a meal to the meal log
         function addMeal() {
             const mealName = document.getElementById('meal-name').value;
-            const ingredients = document.getElementById('meal-ingredients').value.split(',').map(ingredient => ingredient.trim());
-            if (mealName && ingredients.length > 0) {
-                const meal = { name: mealName, ingredients: ingredients };
-                users[loggedInUser].meals.push(meal);
-                saveUsers(); // Save updated user data
-                renderMealLog();
-            }
+            if (!mealName) return;
+
+            const newMeal = { name: mealName, ingredients: ['ingredient 1', 'ingredient 2'] }; // Example ingredients
+            meals.push(newMeal);
+            localStorage.setItem('meals', JSON.stringify(meals));
+
+            renderMealLog();
+            document.getElementById('meal-name').value = ''; // Clear the input
         }
 
-        // Render Meal Log function
-        function renderMealLog() {
-            const mealLogList = document.getElementById('meal-log-list');
-            mealLogList.innerHTML = ''; // Clear current list
-
-            users[loggedInUser].meals.forEach((meal, index) => {
-                const mealItem = document.createElement('li');
-                mealItem.textContent = meal.name;
-                const addButton = document.createElement('button');
-                addButton.textContent = 'Add Ingredients';
-                addButton.onclick = function() {
-                    addIngredientsToShoppingList(meal.ingredients);
-                };
-                mealItem.appendChild(addButton);
-
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete Meal';
-                deleteButton.onclick = function() {
-                    deleteMeal(index);
-                };
-                mealItem.appendChild(deleteButton);
-
-                mealLogList.appendChild(mealItem);
-            });
-        }
-
-        // Add Ingredients to Shopping List function
-        function addIngredientsToShoppingList(ingredients) {
-            const shoppingListUl = document.getElementById('shopping-list-ul');
-            ingredients.forEach(ingredient => {
-                const li = document.createElement('li');
-                li.textContent = ingredient;
-                shoppingListUl.appendChild(li);
-            });
-        }
-
-        // Clear Shopping List function (Only clears the shopping list)
+        // Function to clear the shopping list
         function clearShoppingList() {
-            const shoppingListUl = document.getElementById('shopping-list-ul');
-            shoppingListUl.innerHTML = ''; // Clear the shopping list only
-
-            // Clear the shopping list for the current user (in memory)
-            users[loggedInUser].shoppingList = [];
-            saveUsers(); // Save the cleared shopping list to localStorage
+            shoppingList = [];
+            localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+            renderShoppingList();
         }
 
-        // Delete Meal function (Only deletes the meal from the meal log)
+        // Function to render the shopping list
+        function renderShoppingList() {
+            const shoppingListElement = document.getElementById('shopping-list');
+            shoppingListElement.innerHTML = '';
+
+            shoppingList.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                shoppingListElement.appendChild(li);
+            });
+        }
+
+        // Function to add meal ingredients to the shopping list
+        function addToShoppingList(meal) {
+            meal.ingredients.forEach(ingredient => {
+                shoppingList.push(ingredient);
+            });
+            localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+            renderShoppingList();
+        }
+
+        // Function to delete a meal from the meal log
         function deleteMeal(index) {
-            users[loggedInUser].meals.splice(index, 1);
-            saveUsers(); // Save updated user data
+            meals.splice(index, 1);
+            localStorage.setItem('meals', JSON.stringify(meals));
             renderMealLog();
         }
 
-        // Save users data to localStorage
-        function saveUsers() {
-            localStorage.setItem('users', JSON.stringify(users));
+        // Function to initialize the calendar
+        function initCalendar() {
+            $('#calendar').fullCalendar({
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,agendaWeek,agendaDay'
+                },
+                editable: true, // Enable editing (drag-and-drop)
+                droppable: true, // Allow dropping items onto the calendar
+                drop: function (date, jsEvent, ui, resourceId) {
+                    const mealIndex = ui.helper[0].dataset.index; // Get the meal index from the dragged item
+                    const meal = meals[mealIndex]; // Get the meal object
+
+                    // Save the meal with the selected date (mealDate)
+                    const mealDate = date.format();
+                    localStorage.setItem(mealDate, JSON.stringify(meal));
+
+                    // Render the dropped meal onto the calendar
+                    $('#calendar').fullCalendar('renderEvent', {
+                        title: meal.name,
+                        start: mealDate,
+                        allDay: true
+                    }, true);
+                }
+            });
         }
 
-        // Load user data on page load
+        // Load saved meals and shopping list
+        function loadSavedData() {
+            renderMealLog();
+            renderShoppingList();
+
+            // Load any stored calendar events
+            const storedMeals = Object.keys(localStorage).filter(key => key.includes('mealDate'));
+            storedMeals.forEach(mealDate => {
+                const meal = JSON.parse(localStorage.getItem(mealDate));
+                $('#calendar').fullCalendar('renderEvent', {
+                    title: meal.name,
+                    start: mealDate,
+                    allDay: true
+                });
+            });
+        }
+
+        // Initialize the page
         window.onload = function() {
-            if (loggedInUser) {
-                renderMealLog();
-            }
+            loadSavedData();
+            initCalendar();
         };
-
     </script>
-
 </body>
 </html>
